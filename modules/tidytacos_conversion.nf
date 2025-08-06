@@ -1,0 +1,39 @@
+
+process TIDYTACOS_CREATOR { 
+    errorStrategy 'ignore'
+    tag "${task.index}"
+    publishDir "$params.outdir/$params.tidytacos_dir", mode: 'copy'
+
+    input:
+    path taxons
+    path distributions
+    val tt_objname
+
+    output:
+    path("${tt_objname}+tmp${task.index}"), emit: tt_obj, optional: true
+
+    script:
+    """
+    export R_LIBS_USER=$params.r_site_libraries
+    mkdir -p \$R_LIBS_USER
+    R --slave --no-restore -f $params.scripts_dir/tidytacos_creator.R --args $taxons $distributions "${tt_objname}+tmp${task.index}"
+    """
+}
+
+process TIDYTACOS_COMBINATOR { 
+    publishDir "$params.outdir/$params.tidytacos_final_dir", mode: 'copy'
+
+    input:
+    path ttobj_list
+    val tt_objname
+
+    output:
+    path("$tt_objname"), emit: final_taco, optional: true
+
+    script:
+    """
+    export R_LIBS_USER=$params.r_site_libraries
+    mkdir -p \$R_LIBS_USER
+    R --slave --no-restore -f $params.scripts_dir/tidytacos_combinator.R --args ${ttobj_list.join(' ')} $tt_objname
+    """
+}
