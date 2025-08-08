@@ -16,7 +16,12 @@ process TIDYTACOS_CREATOR {
     """
     export R_LIBS_USER=$params.r_site_libraries
     mkdir -p \$R_LIBS_USER
-    R --slave --no-restore -f $params.scripts_dir/tidytacos_creator.R --args $taxons $distributions "${tt_objname}+tmp${task.index}"
+    R --slave --no-restore -f $params.scripts_dir/tidytacos_creator.R --args $taxons $distributions "${tt_objname}+tmp${task.index}" || {
+        REALPATH=$(realpath "${distributions}")
+        echo "Object creation for tidytacos library failed (possibly because emu tool created an empty counts matrix)" 1>&2
+        echo "check \${REALPATH}" 1>&2
+        exit 1
+    }
     """
 }
 

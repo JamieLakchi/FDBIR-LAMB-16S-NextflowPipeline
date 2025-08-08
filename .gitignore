@@ -1,4 +1,4 @@
 .vscode/
 .nextflow/
 work/
-NFLog.log
+NFLogs/
