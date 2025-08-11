@@ -49,7 +49,6 @@ dependencies:
   - choreographer=1.0.9=pyhe01879c_0
   - clang=20.1.8=default_hfa515fb_0
   - clang-20=20.1.8=default_hddf928d_0
-  - click=8.2.2=pyh707e725_0
   - colorama=0.4.6=pyhd8ed1ab_1
   - coloredlogs=15.0.1=pyhd8ed1ab_4
   - coreutils=9.5=hd590300_0
