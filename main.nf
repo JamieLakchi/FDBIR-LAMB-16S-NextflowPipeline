@@ -5,15 +5,18 @@ include { POSTFILTERING_QC } from './modules/qc_flows.nf'
 include { FILTLONG_FILTER } from './modules/filtering.nf'
 include { CHOPPER_FILTER } from './modules/filtering.nf'
 include { EMU_ABUNDANCE } from './modules/emu_abundance.nf'
+include { EMU_COMBINATOR } from './modules/emu_abundance.nf'
 include { EMU_CHECKDB } from './modules/emu_abundance.nf'
 include { TIDYTACOS_CREATOR } from './modules/tidytacos_conversion.nf'
-include { TIDYTACOS_COMBINATOR } from './modules/tidytacos_conversion.nf'
+include { TIDYTACOS_QC_CREATOR } from './modules/tidytacos_qc.nf'
+include { TIDYTACOS_QC_COMBINATOR } from './modules/tidytacos_qc.nf'
 
 workflow {
     def start_point = params.from_tidytacos ? "tidytacos" :
-                  params.from_clean_fastq ? "clean_fastq" :
-                  params.from_fastq ? "fastq" :
-                  "pod5"
+                    params.from_tsv ? "tsv" :
+                    params.from_clean_fastq ? "clean_fastq" :
+                    params.from_fastq ? "fastq" :
+                    "pod5"
 
     pod5_ch = params.from_pod5 && start_point == "pod5" ? 
             Channel.fromPath(params.from_pod5) : 
@@ -26,6 +29,10 @@ workflow {
     clean_fastq_ch = params.from_clean_fastq && start_point == "clean_fastq" ? 
                      Channel.fromPath("${params.from_clean_fastq}/*.fastq") : 
                      Channel.empty()
+
+    tsv_ch = params.from_tsv && start_point == "tsv" ?
+             Channel.fromPath("${params.from_tsv}", type: 'dir') : 
+             Channel.empty()        
                      
     tidytacos_ch = params.from_tidytacos && start_point == "tidytacos" ? 
                    Channel.fromPath("${params.from_tidytacos}/*", type: 'dir') : 
@@ -43,7 +50,7 @@ workflow {
     // use filtlong and chopper to remove any undesirable reads
     filtlong_filtered_fastq = FILTLONG_FILTER(all_fastq.flatten())
     chopper_filtered_fastq = CHOPPER_FILTER(filtlong_filtered_fastq.filtered)
-
+    
     all_clean_fastq = chopper_filtered_fastq.filtered.mix(clean_fastq_ch)
 
     // nanoplot as quality control (for comparison with pre)
@@ -51,13 +58,17 @@ workflow {
 
     // first check if a db exists at given dir
     dbch = EMU_CHECKDB()
+
     // relative abundance estimation with emudb
     estimation_tsv = EMU_ABUNDANCE(dbch.dbchecked, all_clean_fastq)
 
-    // conversion to tidytacos object with R
-    tt_obj = TIDYTACOS_CREATOR(estimation_tsv.taxons, estimation_tsv.distributions, params.tt_objname)
+    all_tsv = estimation_tsv.taxons.mix(tsv_ch)
 
-    all_tidytacos = tt_obj.mix(tidytacos_ch)
+    combined_tsv = EMU_COMBINATOR(all_tsv.collect())
+    TIDYTACOS_CREATOR(combined_tsv.combined_rels, params.tt_objname)
 
-    TIDYTACOS_COMBINATOR(all_tidytacos.collect(), params.tt_objname)
+    ttqc_obj = TIDYTACOS_QC_CREATOR(estimation_tsv.taxons, estimation_tsv.distributions, params.tt_objname)
+
+    all_ttqc_obj = ttqc_obj.mix(tidytacos_ch)
+    TIDYTACOS_QC_COMBINATOR(all_ttqc_obj.collect(), params.tt_objname)
 }

@@ -3,9 +3,9 @@
 # Last Update: 2025/08/06
 # Dependencies: None
 # Description:
-# This R script takes the two resulting files from an emu relative abundance estimation run
+# This R script takes the resulting file from emu combine-output
 # and creates a tidytacos object from it (and writes it back to a given object name)
-# example usage: R --slave --no-restore -f tidytacos_creator.R --args $taxons $distributions $tt_objname
+# example usage: R --slave --no-restore -f tidytacos_creator.R --args $combined $tt_objname
 
 required_packages <- c("dplyr", "cli", "tidyverse", "devtools")
 
@@ -24,33 +24,16 @@ library(tidytacos)
 
 args <- commandArgs(trailingOnly=TRUE)
 
-taxonstsv <- args[1]
-distributionstsv <- args[2]
-ttobj_outdir <- args[3]
+combined <- args[1]
+objname <- args[2]
 
-taxons <- read.delim(taxonstsv)
-distributions <- read.delim(distributionstsv, header=FALSE)
+tsv <- read.delim(combined)
 
-left_column <- distributions[-1, 1]
-top_row <- distributions[1, -1]
-counts_df <- distributions[-1, -1]
+tsv[is.na(tsv)] <- 0
 
-full_taxonomy_list <- taxons[match(top_row, taxons[, "tax_id"]), "full_taxonomy"]
-
-counts_matrix <- as.matrix(counts_df)
-counts_matrix[is.na(counts_matrix)] <- 0
-
-rownames(counts_matrix) <- left_column
-colnames(counts_matrix) <- top_row
-
-tt <- tidytacos::create_tidytacos(counts_matrix, taxa_are_columns = TRUE)
-
-taxon_metadata <- taxons[taxons$tax_id %in% top_row, ]
-taxonomy <- as_tibble(taxon_metadata)
 taxonomy <- select(
-  taxonomy,
-  taxon = tax_id,
-  kingdom,
+  tsv,
+  kingdom=superkingdom,
   phylum,
   class,
   order,
@@ -59,10 +42,22 @@ taxonomy <- select(
   species
 )
 
-tt <- add_metadata(tt, taxonomy, table_type = "taxa")
+taxonomy$taxon <- taxonomy$species
 
-tt <- set_rank_names(
-  tt, c("kingdom", "phylum", "class", "order", "family", "genus")
-)
+taxonomy <- as.tibble(taxonomy)
 
-tidytacos::write_tidytacos(tt, ttobj_outdir)
+counts <- select(tsv,
+                superkingdom:last_col(),
+                -superkingdom)
+
+counts <- as.matrix(counts)
+
+rownames(counts) <- taxonomy$species
+
+tt <- tidytacos::create_tidytacos(counts, taxa_are_columns = FALSE)
+
+tt <- tidytacos::add_metadata(tt, taxonomy, table_type = "taxa")
+
+tt <- tidytacos::set_rank_names(tt,  c("kingdom", "phylum", "class", "order", "family", "genus", "species"))
+
+tidytacos::write_tidytacos(tt, objname)

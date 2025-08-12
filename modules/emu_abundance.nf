@@ -67,3 +67,19 @@ process EMU_ABUNDANCE {
     emu abundance "$fastq_file" --db "$params.emu_dbdir/$params.emu_dbname" --keep-counts --keep-read-assignments --threads $params.emu_threadc
     """
 }
+
+process EMU_COMBINATOR {
+    publishDir "$params.outdir/$params.emu_dir", mode: 'copy'
+
+    input:
+    path all_rels
+
+    output:
+    path("¨*.tsv") ,emit: combined_rels
+
+    script:
+    """
+    emu combine-outputs $params.outdir/$params.emu_dir/results species
+    """
+
+}
