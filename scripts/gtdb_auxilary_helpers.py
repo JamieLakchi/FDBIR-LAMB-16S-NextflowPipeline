@@ -18,7 +18,7 @@ import pandas as pd
 from Bio import SeqIO
 from pathlib import Path
 
-KINGDOM = 'kingdom'
+KINGDOM = 'superkingdom'
 PHYLUM = 'phylum' 
 CLASS = 'class'
 ORDER = 'order'
