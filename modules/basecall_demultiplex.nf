@@ -5,6 +5,9 @@ process DORADO_BASECALL {
 
     label 'SuperHeavy'
 
+    input:
+    path(pod5dir)
+
     output:
     path("calls.bam"), emit: bam
 
@@ -12,7 +15,7 @@ process DORADO_BASECALL {
     """
     $params.dorado basecaller \
     $params.dorado_model \
-    $params.pod5_dir \
+    $pod5dir \
     --kit-name $params.dorado_kitname \
     --no-trim \
     --batchsize $params.dorado_batchsize \

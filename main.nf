@@ -10,26 +10,54 @@ include { TIDYTACOS_CREATOR } from './modules/tidytacos_conversion.nf'
 include { TIDYTACOS_COMBINATOR } from './modules/tidytacos_conversion.nf'
 
 workflow {
+    def start_point = params.from_tidytacos ? "tidytacos" :
+                  params.from_clean_fastq ? "clean_fastq" :
+                  params.from_fastq ? "fastq" :
+                  "pod5"
+
+    pod5_ch = params.from_pod5 && start_point == "pod5" ? 
+            Channel.fromPath(params.from_pod5) : 
+            Channel.empty()
+              
+    fastq_ch = params.from_fastq && start_point == "fastq" ? 
+               Channel.fromPath("${params.from_fastq}/*.fastq") : 
+               Channel.empty()
+               
+    clean_fastq_ch = params.from_clean_fastq && start_point == "clean_fastq" ? 
+                     Channel.fromPath("${params.from_clean_fastq}/*.fastq") : 
+                     Channel.empty()
+                     
+    tidytacos_ch = params.from_tidytacos && start_point == "tidytacos" ? 
+                   Channel.fromPath("${params.from_tidytacos}/*", type: 'dir') : 
+                   Channel.empty()
+
     // dorado batch analyse pod5 files
-    DORADO_BASECALL()
+    DORADO_BASECALL(pod5_ch)
     fastq = DORADO_DEMULTIPLEX(DORADO_BASECALL.out.bam)
 
+    all_fastq = fastq.fastq.mix(fastq_ch)
+
     // nanoplot as quality control (before filtering)
-    PREFILTERING_QC(fastq.fastq)
+    PREFILTERING_QC(all_fastq)
 
     // use filtlong and chopper to remove any undesirable reads
-    filtlong_filtered_fastq = FILTLONG_FILTER(fastq.fastq.flatten())
+    filtlong_filtered_fastq = FILTLONG_FILTER(all_fastq.flatten())
     chopper_filtered_fastq = CHOPPER_FILTER(filtlong_filtered_fastq.filtered)
 
+    all_clean_fastq = chopper_filtered_fastq.filtered.mix(clean_fastq_ch)
+
     // nanoplot as quality control (for comparison with pre)
-    POSTFILTERING_QC(chopper_filtered_fastq.filtered)
+    POSTFILTERING_QC(all_clean_fastq)
 
     // first check if a db exists at given dir
     dbch = EMU_CHECKDB()
     // relative abundance estimation with emudb
-    estimation_tsv = EMU_ABUNDANCE(dbch.dbchecked, chopper_filtered_fastq.filtered)
+    estimation_tsv = EMU_ABUNDANCE(dbch.dbchecked, all_clean_fastq)
 
     // conversion to tidytacos object with R
     tt_obj = TIDYTACOS_CREATOR(estimation_tsv.taxons, estimation_tsv.distributions, params.tt_objname)
-    TIDYTACOS_COMBINATOR(tt_obj.collect(), params.tt_objname)
+
+    all_tidytacos = tt_obj.mix(tidytacos_ch)
+
+    TIDYTACOS_COMBINATOR(all_tidytacos.collect(), params.tt_objname)
 }
