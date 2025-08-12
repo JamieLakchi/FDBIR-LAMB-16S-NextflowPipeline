@@ -65,7 +65,8 @@ workflow {
     all_tsv = estimation_tsv.taxons.mix(tsv_ch)
 
     combined_tsv = EMU_COMBINATOR(all_tsv.collect())
-    TIDYTACOS_CREATOR(combined_tsv.combined_rels, params.tt_objname)
+    combined_tsv_ch = channel.fromPath("$params.outdir/$params.emu_dir/results/emu-combined-species.tsv")
+    TIDYTACOS_CREATOR(combined_tsv.done, combined_tsv_ch, params.tt_objname)
 
     ttqc_obj = TIDYTACOS_QC_CREATOR(estimation_tsv.taxons, estimation_tsv.distributions, params.tt_objname)
 

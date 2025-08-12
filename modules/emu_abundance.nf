@@ -75,7 +75,7 @@ process EMU_COMBINATOR {
     path all_rels
 
     output:
-    path("*.tsv") ,emit: combined_rels
+    val true ,emit: done
 
     script:
     """

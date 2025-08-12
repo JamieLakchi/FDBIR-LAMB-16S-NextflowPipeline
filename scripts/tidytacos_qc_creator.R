@@ -16,7 +16,9 @@ if (length(missing_packages) > 0) {
   sapply(missing_packages, require, character.only = TRUE)
 }
 
-devtools::install_github("LebeerLab/tidytacos")
+if (!require("tidytacos", character.only = TRUE, quietly = TRUE)) {
+  devtools::install_github("LebeerLab/tidytacos")
+}
 
 library(dplyr) 
 library(tidyverse)
