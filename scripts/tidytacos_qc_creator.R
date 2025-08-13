@@ -52,7 +52,7 @@ taxonomy <- as_tibble(taxon_metadata)
 taxonomy <- select(
   taxonomy,
   taxon = tax_id,
-  kingdom,
+  superkingdom,
   phylum,
   class,
   order,
@@ -64,7 +64,7 @@ taxonomy <- select(
 tt <- add_metadata(tt, taxonomy, table_type = "taxa")
 
 tt <- set_rank_names(
-  tt, c("kingdom", "phylum", "class", "order", "family", "genus")
+  tt, c("superkingdom", "phylum", "class", "order", "family", "genus")
 )
 
 tidytacos::write_tidytacos(tt, ttobj_outdir)
