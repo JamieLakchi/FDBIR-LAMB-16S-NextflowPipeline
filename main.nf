@@ -21,7 +21,7 @@ workflow {
                     "pod5"
 
     pod5_ch = params.from_pod5 && start_point == "pod5" ? 
-            Channel.fromPath(params.from_pod5) : 
+            Channel.fromPath(params.from_pod5.tokenize(' ')) : 
             Channel.empty()
               
     fastq_ch = params.from_fastq && start_point == "fastq" ? 
@@ -50,8 +50,8 @@ workflow {
                    Channel.empty()
 
     // dorado batch analyse pod5 files
-    DORADO_BASECALL(pod5_ch)
-    fastq = DORADO_DEMULTIPLEX(DORADO_BASECALL.out.bam)
+    bams = DORADO_BASECALL(pod5_ch)
+    fastq = DORADO_DEMULTIPLEX(bams.bam)
 
     all_fastq = fastq.fastq.mix(fastq_ch)
 
