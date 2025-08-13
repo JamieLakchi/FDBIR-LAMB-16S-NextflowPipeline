@@ -10,6 +10,8 @@ include { EMU_CHECKDB } from './modules/emu_abundance.nf'
 include { TIDYTACOS_CREATOR } from './modules/tidytacos_conversion.nf'
 include { TIDYTACOS_QC_CREATOR } from './modules/tidytacos_qc.nf'
 include { TIDYTACOS_QC_COMBINATOR } from './modules/tidytacos_qc.nf'
+include { NAIVEANALYSIS } from './modules/tidytacos_qc.nf'
+
 
 workflow {
     def start_point = params.from_tidytacos ? "tidytacos" :
@@ -32,7 +34,16 @@ workflow {
 
     tsv_ch = params.from_tsv && start_point == "tsv" ?
              Channel.fromPath("${params.from_tsv}", type: 'dir') : 
-             Channel.empty()        
+             Channel.empty()
+
+    taxons_tsv_ch = params.from_tsv && start_point == "tsv" ?
+                    Channel.fromPath("${params.from_tsv}/*abundance.tsv") : 
+                    Channel.empty()
+
+    distributions_tsv_ch = params.from_tsv && start_point == "tsv" ?
+                           Channel.fromPath("${params.from_tsv}/*distributions.tsv") : 
+                           Channel.empty()
+        
                      
     tidytacos_ch = params.from_tidytacos && start_point == "tidytacos" ? 
                    Channel.fromPath("${params.from_tidytacos}/*", type: 'dir') : 
@@ -61,14 +72,16 @@ workflow {
 
     // relative abundance estimation with emudb
     estimation_tsv = EMU_ABUNDANCE(dbch.dbchecked, all_clean_fastq)
+    
+    all_taxons_tsv = estimation_tsv.taxons.mix(taxons_tsv_ch)
+    all_distributions_tsv = estimation_tsv.distributions.mix(distributions_tsv_ch)
 
-    all_tsv = estimation_tsv.taxons.mix(tsv_ch)
+    combined_tsv = EMU_COMBINATOR(estimation_tsv.taxons.toList(), tsv_ch)
 
-    combined_tsv = EMU_COMBINATOR(all_tsv.collect())
-    combined_tsv_ch = channel.fromPath("$params.outdir/$params.emu_dir/results/emu-combined-species.tsv")
-    TIDYTACOS_CREATOR(combined_tsv.done, combined_tsv_ch, params.tt_objname)
+    TIDYTACOS_CREATOR(combined_tsv.combineddir, params.tt_objname)
+    NAIVEANALYSIS(all_taxons_tsv, all_distributions_tsv, params.tt_objname)
 
-    ttqc_obj = TIDYTACOS_QC_CREATOR(estimation_tsv.taxons, estimation_tsv.distributions, params.tt_objname)
+    ttqc_obj = TIDYTACOS_QC_CREATOR(all_taxons_tsv, all_distributions_tsv, params.tt_objname)
 
     all_ttqc_obj = ttqc_obj.mix(tidytacos_ch)
     TIDYTACOS_QC_COMBINATOR(all_ttqc_obj.collect(), params.tt_objname)

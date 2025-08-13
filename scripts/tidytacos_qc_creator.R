@@ -35,7 +35,7 @@ distributions <- read.delim(distributionstsv, header=FALSE)
 
 left_column <- distributions[-1, 1]
 top_row <- distributions[1, -1]
-counts_df <- distributions[-1, -1]
+counts_df <- distributions[-1, -1, drop=FALSE]
 
 full_taxonomy_list <- taxons[match(top_row, taxons[, "tax_id"]), "full_taxonomy"]
 

@@ -3,8 +3,7 @@ process TIDYTACOS_CREATOR {
     publishDir "$params.outdir/$params.tidytacos_outdir", mode: 'copy'
 
     input:
-    val done
-    path combined_tsv
+    val combineddir
     val tt_objname
 
     output:
@@ -14,6 +13,6 @@ process TIDYTACOS_CREATOR {
     """
     export R_LIBS_USER=$params.r_site_libraries
     mkdir -p \$R_LIBS_USER
-    R --slave --no-restore -f $params.scripts_dir/tidytacos_creator.R --args $combined_tsv $tt_objname
+    R --slave --no-restore -f $params.scripts_dir/tidytacos_creator.R --args $combineddir/emu-combined-species.tsv $tt_objname
     """
 }

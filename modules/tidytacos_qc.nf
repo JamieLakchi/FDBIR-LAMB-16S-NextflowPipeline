@@ -26,6 +26,7 @@ process TIDYTACOS_QC_CREATOR {
 }
 
 process TIDYTACOS_QC_COMBINATOR { 
+    errorStrategy 'ignore'
     publishDir "$params.outdir/$params.tidytacos_qcdir", mode: 'copy'
 
     input:
@@ -40,5 +41,26 @@ process TIDYTACOS_QC_COMBINATOR {
     export R_LIBS_USER=$params.r_site_libraries
     mkdir -p \$R_LIBS_USER
     R --slave --no-restore -f $params.scripts_dir/tidytacos_qc_combinator.R --args ${ttobj_list.join(' ')} $tt_objname
+    """
+}
+
+process NAIVEANALYSIS {
+    errorStrategy 'ignore'
+    tag "${task.index}"
+    publishDir "$params.outdir/$params.tidytacos_qcdir", mode: 'copy'
+
+    input:
+    path taxons
+    path distributions
+    val tt_objname
+
+    output:
+    path("**", type: "dir")
+
+    script:
+    """
+    export R_LIBS_USER=$params.r_site_libraries
+    mkdir -p \$R_LIBS_USER
+    R --slave --no-restore -f $params.scripts_dir/naive_sample_analysis.R --args $taxons $distributions "${tt_objname}_analysis${task.index}"
     """
 }
