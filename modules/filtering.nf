@@ -34,7 +34,7 @@ process CHOPPER_FILTER{
     path fastq_file
 
     output:
-    path("filtered_*.fastq"), emit: filtered, optional: true
+    path("*.fastq"), emit: filtered, optional: true
 
     script:
     """
@@ -45,7 +45,7 @@ process CHOPPER_FILTER{
     > temp_output.tmp
 
     if [ -s temp_output.tmp ]; then
-        mv temp_output.tmp filtered_${fastq_file}
+        mv temp_output.tmp ${fastq_file}
     else
         rm -f temp_output.tmp
     fi

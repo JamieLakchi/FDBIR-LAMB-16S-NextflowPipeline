@@ -5,7 +5,7 @@ Last Update: 2025/08/06
 Dependencies Bio (SeqIO), pandas
 Description:
 A program to create the extra files needed to create a custom emu (https://github.com/treangenlab/emu) database from a .fasta file.
-Program tries to creat a .map and a .tsv, this program exists mainly to make it easier to fetch and process data from grdb (https://gtdb.ecogenomic.org).
+Program tries to creat a .map and a .tsv, this program exists mainly to make it easier to fetch and process data from gtdb (https://gtdb.ecogenomic.org).
 """
 
 import requests
@@ -156,18 +156,44 @@ def parse_fasta_to_taxonomy(fasta_file, tsv_output, map_output):
             seq2tax_data.append([accession, current_tax_id])
     create_output_files(seq2tax_data, taxonomy_data, tsv_output, map_output)
 
+def combine_fasta(files, outname, normalize_names):
+    pass
+
 if __name__ == "__main__":
+    operation_opts = [
+        "emudb_aux",
+        "fasta_combine"
+    ]
+
     argparser = argparse.ArgumentParser()
-    argparser.add_argument("--fasta_fetch", help="takes a link, if specified the program will try to download a .fna.gz from that location and generate a .tsv and .map from there", action="store", default=None)
-    argparser.add_argument("--fasta_name", help="specify where a fasta file is located, used as filename when using fasta_fetch", action="store", default="gtdblatest_bac120.fasta")
-    argparser.add_argument("--map_name", help="specify the name of the .map file", action="store", default="seq2taxid.map")
-    argparser.add_argument("--tsv_name", help="specify the name of the .tsv file", action="store", default="taxonomy.tsv")
+    argparser.add_argument("operation", help="""
+                           select operation, either "emudb_aux" or "fasta_combine"
+                           emudb_aux: generates the auxilary files from a .fasta file to create an emu database
+                           fasta_combine: takes multiple fasta files and combines them
+                           """, action="store", default=None)
+    argparser.add_argument("--fasta_fetch", help="[emudb_aux] takes a link, if specified the program will try to download a .fna.gz from that location and generate a .tsv and .map from there", action="store", default=None)
+    argparser.add_argument("--fasta_name", help="[emudb_aux/fasta_combine] specify where a fasta file is located, used as filename when using fasta_fetch (only looks at first name when operation is emudb_aux)", nargs="+", action="store", default="gtdblatest_bac120.fasta")
+    argparser.add_argument("--normalize_taxa", help="[fasta_combine] if present appends x__ to taxa if not yet there (ex: d__Bacteria, p__Pseudomonadota)", action="store_true", default=False)
+    argparser.add_argument("--fasta_out", help="[fasta_combine] name for output file", action="store", default=None)
+    argparser.add_argument("--map_name", help="[emudb_aux] specify the name of the .map file", action="store", default="seq2taxid.map")
+    argparser.add_argument("--tsv_name", help="[emudb_aux] specify the name of the .tsv file", action="store", default="taxonomy.tsv")
     args = argparser.parse_args()
+
+    if(args.operation not in operation_opts):
+        raise f"Select a valid operation: {operation_opts}"
     
     fasta_file = args.fasta_name
 
-    if(args.fasta_fetch != None):
-        download_and_decompress(args.fasta_fetch, fasta_file)
+        
+    if(args.operation == "emudb_aux"):
+        if(args.fasta_fetch != None):
+            download_and_decompress(args.fasta_fetch, fasta_file)
 
-    parse_fasta_to_taxonomy(fasta_file, args.tsv_name, args.map_name)
+        parse_fasta_to_taxonomy(fasta_file[0], args.tsv_name, args.map_name)
+
+    elif(args.operation == "fasta_combine"):
+        if(args.fasta_out == "none"):
+            raise "Argument --fasta_out required for fasta_combine operation"
+        
+        combine_fasta(args.fasta_file, args.fasta_out, args.normalize_taxa)
     
