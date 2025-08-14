@@ -34,7 +34,7 @@ workflow {
 
     tsv_ch = params.from_tsv && start_point == "tsv" ?
              Channel.fromPath("${params.from_tsv}", type: 'dir') : 
-             Channel.fromValue("NO TSV DIR GIVEN")
+             Channel.value("NO TSV DIR GIVEN")
 
     taxons_tsv_ch = params.from_tsv && start_point == "tsv" ?
                     Channel.fromPath("${params.from_tsv}/*abundance.tsv") : 
