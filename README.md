@@ -105,6 +105,16 @@ R-based taxonomic analysis configuration:
 - **r_site_libraries**: Path to R package library directory
 - **tt_objname**: Object name for tidytacos data structure
 
+### NAIVE ANALYSIS OUTPUT
+
+The naive_sample_analysis.R script outputs two .csv files: read_analysis.csv and sample_analysis.csv.
+
+The read_analysis.csv file contains 4 columns: read_id (which contains the read id given by nanopore),
+best_guess (which is the best score of the read), best_guess_full_taxonomy (which has the corresponding full taxonomic data of the best guess), and best_guess_min_distance (which contains the difference between the score of the best guess and the second best guess).
+
+The sample_analysis.csv file contains 4 columns: full_taxonomy (indicates which taxonomy the remaining columns in this row are for), high_confidence_count (contains the amount of times this species was guessed with a score >= 98%), best_guess_count (contains the amount of times this species was guessed with the highest score below 98% but above 2%), and low_confidence_count (contains the amount of times this species was guessed with a score which was not the highest of the read but still above 2%).
+So all the counts exclude eachother, no guess is counted twice (so the sum of all the entries for one species is the total amount of times this species was guessed with a score above 2%).
+
 ## OUTPUT DIRECTORIES
 
 All output paths are relative to the base output directory:
