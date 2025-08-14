@@ -5,17 +5,17 @@ nextflow.config - Configuration file for Nextflow nanopore sequencing pipeline
 
 ## SYNOPSIS
 ```
-nextflow run pipeline.nf -c nextflow.config
+(NanoporeNFEnv)$ nextflow run pipeline.nf -c nextflow.config
 ```
 
 ## DESCRIPTION
-This configuration file defines parameters and settings for a Nextflow pipeline designed to process Oxford Nanopore sequencing data. The pipeline performs basecalling, quality filtering, and taxonomic classification of 16S rRNA gene sequences.
+This configuration file defines parameters and settings for a Nextflow pipeline designed to process Oxford Nanopore sequencing data. The pipeline performs basecalling, quality filtering, and taxonomic classification of the 16S gene.
 
 ## EXECUTION ENVIRONMENT
 
-### Docker and Conda
-- **docker.enabled**: Enables Docker container execution
-- **conda.enabled**: Enables Conda environment management
+### Conda
+The pipeline requires the conda environment (from environment.yml) to already be active.
+Use `conda activate NanoporeNFEnv` to activate the environment.
 
 ### Resource Allocation
 Default executor settings are:
