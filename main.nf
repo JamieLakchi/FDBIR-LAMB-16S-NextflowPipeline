@@ -34,7 +34,7 @@ workflow {
 
     tsv_ch = params.from_tsv && start_point == "tsv" ?
              Channel.fromPath("${params.from_tsv}", type: 'dir') : 
-             Channel.value("NO TSV DIR GIVEN")
+             Channel.empty()
 
     taxons_tsv_ch = params.from_tsv && start_point == "tsv" ?
                     Channel.fromPath("${params.from_tsv}/*abundance.tsv") : 
@@ -76,7 +76,7 @@ workflow {
     all_taxons_tsv = estimation_tsv.taxons.mix(taxons_tsv_ch)
     all_distributions_tsv = estimation_tsv.distributions.mix(distributions_tsv_ch)
 
-    combined_tsv = EMU_COMBINATOR(estimation_tsv.taxons.toList(), tsv_ch)
+    combined_tsv = EMU_COMBINATOR(estimation_tsv.taxons.toList(), tsv_ch.toList())
 
     TIDYTACOS_CREATOR(combined_tsv.combineddir, params.tt_objname)
     NAIVEANALYSIS(all_taxons_tsv, all_distributions_tsv, params.tt_objname)
