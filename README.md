@@ -126,6 +126,7 @@ All output paths are relative to the base output directory:
 - **Filtlong**: Sequence filtering tool
 - **Chopper**: Quality trimming tool (via conda)
 - **EMU**: Taxonomic classifier (via conda)
+- **Nanoplot**: Quality Reporting (via conda)
 - **biopython's SeqIO**: fasta reading (via conda)
 - **R with tidytacos**: For taxonomic data analysis
 
