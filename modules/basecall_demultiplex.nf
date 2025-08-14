@@ -28,7 +28,6 @@ process DORADO_BASECALL {
     "$params.dorado_model" \
     "$pod5dir" \
     --kit-name "$params.dorado_kitname" \
-    --max-reads 1 \
     --no-trim \
     --batchsize $params.dorado_batchsize \
      > "\${FOLDERNAME}_calls.bam"
