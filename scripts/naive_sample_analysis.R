@@ -36,10 +36,6 @@ library(tidytacos)
 
 args <- commandArgs(trailingOnly=TRUE)
 
-taxonstsv <- args[1]
-distributionstsv <- args[2]
-outdir <- args[3]
-
 taxons <- read.delim(taxonstsv, header=TRUE)
 distributions <- read.delim(distributionstsv, header=FALSE)
 
@@ -62,9 +58,11 @@ counts$read_id <- readids
 sampleanalysis_df <- data.frame(
   high_confidence_count = rep(0, length(full_taxonomy)),
   best_guess_count = rep(0, length(full_taxonomy)),
-  low_confidence_count = rep(0, length(full_taxonomy)),
-  full_taxonomy = full_taxonomy
+  low_confidence_count = rep(0, length(full_taxonomy))
 )
+
+sampleanalysis_df$full_taxonomy <- full_taxonomy
+
 
 readanalysis_data <- apply(counts, 1, function(read) {
   readid <- read["read_id"]
@@ -79,7 +77,7 @@ readanalysis_data <- apply(counts, 1, function(read) {
   if(0.02 <= max_val & max_val < 0.98) {
     for(j in 1:length(numeric_vals)) {
       current_val <- numeric_vals[j]
-      current_colname <- full_taxonomy[j]
+      current_colname <- as.character(full_taxonomy[j])
       
       if(current_val == max_val) {
         relevant_row <- sampleanalysis_df[sampleanalysis_df$full_taxonomy == current_colname,]
@@ -106,6 +104,11 @@ readanalysis_data <- apply(counts, 1, function(read) {
 })
 
 readanalysis_df <- as.data.frame(t(readanalysis_data), stringsAsFactors=FALSE)
+
+sampleanalysis_df$full_taxonomy <- unlist(sampleanalysis_df$full_taxonomy)
+sampleanalysis_df$high_confidence_count <- unlist(sampleanalysis_df$high_confidence_count)
+sampleanalysis_df$best_guess_count <- unlist(sampleanalysis_df$best_guess_count)
+sampleanalysis_df$low_confidence_count <- unlist(sampleanalysis_df$low_confidence_count)
 
 dir.create(outdir, recursive = TRUE, showWarnings = FALSE)
 write.csv(sampleanalysis_df, paste0(outdir, "/sample_analysis.csv"), row.names=FALSE)
