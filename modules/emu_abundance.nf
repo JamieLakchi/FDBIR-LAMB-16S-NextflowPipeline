@@ -81,7 +81,7 @@ process EMU_COMBINATOR {
     script:
     """
     TSVPATH=${all_rels.size() > 0 ? "$params.outdir/$params.emu_dir/results" : tsv_dir[0]}
-    echo $TSVPATH
+    echo \$TSVPATH
     emu combine-outputs \$TSVPATH species
     TSVREALPATH=\$(realpath \$TSVPATH)
     """
