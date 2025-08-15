@@ -29,7 +29,7 @@ Can only be changed via .config file.
 
 The pipeline supports multiple starting points via the `from_*` parameters. The latest step with a non-empty path is automatically chosen as the starting point:
 
-- **from_pod5**: Directory containing raw POD5 files from nanopore sequencing
+- **from_pod5**: Directory containing raw POD5 files from nanopore sequencing (can also be fed a space seperated list in quotes: "path_1 path_2 path_n")
 - **from_fastq**: Directory containing FASTQ files (post-basecalling)
 - **from_clean_fastq**: Directory containing quality- and length-filtered FASTQ files
 - **from_tsv**: Directory for combining taxonomic classification outputs
